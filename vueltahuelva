@@ -1,0 +1,337 @@
+-- Simple queries on database of "Vuelta ciclista a Huelva"
+
+-- 1. Algunas expresiones matemáticas
+
+SELECT 10 + 1 AS e1, 20 * 1.21 AS e2, 20 % 7 AS e3, (2 + 3) * 4 AS e4;
+
+-- 2. Algunas expresiones lógicas
+
+SELECT 4 > 2, 4 < 2, 4 > 2 AND 3 > 5, 4 > 2 OR 3 > 5, TRUE, FALSE, NOT 3 > 5;
+
+SELECT 4 > 2, 4 < 2, 4 > 2 && 3 > 5, 4 > 2 || 3 > 5, TRUE, FALSE, ! (3 > 5);
+
+-- 3. Todos los datos de los ciclistas
+
+SELECT *
+FROM cyclist;
+
+-- 4. El nombre y la fecha de nacimiento de los ciclistas belgas
+
+SELECT fullname, birthdate
+FROM cyclist
+WHERE country = "Bélgica";
+
+-- 5. Equipos que no sean españoles
+
+SELECT *
+FROM team
+WHERE country != "España";
+
+-- 6. Ciclistas nacidos en los años 1998 y 1999
+
+SELECT *
+FROM cyclist
+WHERE birthdate >= "1998-01-01" AND birthdate <= "1999-12-31";
+
+-- 7. Ciclistas nacidos en los años 1998 y 2000
+
+SELECT *
+FROM cyclist
+WHERE birthdate >= "1998-01-01" AND birthdate <= "1998-12-31"
+OR birthdate >= "2000-01-01" AND birthdate <= "2000-12-31";
+
+-- 8. Etapas que empiecen o terminen en la capital
+
+SELECT *
+FROM stage
+WHERE starloc = "Huelva" OR endloc = "Huelva";
+
+-- 9. Etapas que no empicen ni terminen en la capital
+
+SELECT *
+FROM stage
+WHERE NOT (starloc = "Huelva" OR endloc = "Huelva");
+
+-- también puede solucionarse con AND
+
+SELECT *
+FROM stage
+WHERE starloc != "Huelva" AND endloc != "Huelva";
+
+-- 10. Todos los datos de las etapas con la distancia en millas
+
+SELECT *, ROUND(kms / 1.60934, 1) AS milles
+FROM stage;
+
+-- Operador LIKE para caracteres y fechas
+-- Compara el valor de la izquierda con el patrón de la derecha, usando comodines:
+-- % un conjunto cualquiera de caracteres
+-- _ un carácter cualquiera
+
+-- 11. Ciclistas que tengan "Diaz" en su nombre y apellidos
+
+SELECT *
+FROM cyclist
+WHERE fullname LIKE "%Diaz%";
+
+-- 12. Ciclistas nacidos en los años 1998 y 2000
+
+SELECT *
+FROM cyclist
+WHERE birthdate LIKE "1998%" OR birthdate LIKE "2000%";
+
+-- 13. Ciclistas nacidos en octubre de cualquier año
+
+SELECT *
+FROM cyclist
+WHERE birthdate LIKE "%____-10-__";
+
+-- Función CONCAT concatena cadenas de caracteres
+
+-- 14. Escribe lo siguiente "El ciclista ... nació en ..." 
+
+SELECT CONCAT("El ciclista ", fullname, " nació en ", country) AS mytext
+FROM cyclist;
+
+-- Funciones LOWER y UPPER devuelven el texto en minúsculas o mayúsculas
+
+-- 15. Los países en mayúsculas
+
+SELECT UPPER(country)
+FROM cyclist;
+
+-- JOIN (equijoin)
+-- Es la operación más importante en las bases de datos relacionales.
+-- Empareja los registros de la tabla hija con los de la tabla padre.
+-- La cardinalidad del resultado es el número de registros en la tabla hija
+-- descontando los valores nulos en la clave ajena, si los hay.
+-- Los registros de la tabla hija con NULL en la clave ajena no aparecen.
+-- Los registros de la tabla padre sin hijos no aparecen.
+
+-- 16. Equijoin de equipos y ciclistas
+
+SELECT * 
+FROM team JOIN cyclist ON team.idteam = cyclist.idteam;
+
+-- 17. Equijoin de cyc_sta y cyclist
+
+SELECT *
+FROM cyclist JOIN cyc_sta ON cyclist.idcyclist = cyc_sta.idcyclist;
+
+-- 18. Equijoin de cyc_sta y stage
+
+SELECT *
+FROM stage s JOIN cyc_sta c ON s.idstage = c.idstage;
+
+-- 19. Todos los datos del equipo donde corre Joao Silva
+
+SELECT t.* 
+FROM team t JOIN cyclist c ON t.idteam = c.idteam
+WHERE c.fullname LIKE "Joao Silva %";
+
+-- 20. Ciclistas extranjeros que corren en equipos españoles
+
+SELECT c.* 
+FROM team t JOIN cyclist c ON t.idteam = c.idteam
+WHERE c.country != "España" AND t.country = "España";
+
+-- 21. Identificadores de ciclistas que ganaron alguna etapa
+
+SELECT idcyclist
+FROM cyc_sta
+WHERE position = 1;
+
+-- 22. Añadir a lo anterior todos los datos de los ciclistas
+
+SELECT *
+FROM cyclist JOIN cyc_sta ON cyclist.idcyclist = cyc_sta.idcyclist
+WHERE position = 1;
+
+-- 23. Identificador del ciclista que ganó las etapas con salida o
+-- llegada en Huelva
+
+SELECT *
+FROM stage s JOIN cyc_sta c ON s.idstage = c.idstage
+WHERE (s.starloc = "Huelva" OR s.endloc = "Huelva") AND c.position = 1;
+
+-- 24. Identificadores de equipos con ciclistas belgas, sin duplicados
+-- La clausula DISTINCT elimina filas duplicadas en el resultado
+
+SELECT DISTINCT idteam
+FROM cyclist
+WHERE country = "Bélgica";
+
+-- 25. Añadir a lo anterior todos los datos de esos equipos
+
+SELECT DISTINCT t.*
+FROM cyclist c JOIN team t ON c.idteam = t.idteam
+WHERE c.country = "Bélgica";
+ 
+-- 26. Equijoin de las tablas team, cyclist y cyc_sta
+
+SELECT *
+FROM team t 
+JOIN cyclist c ON t.idteam = c.idteam
+JOIN cyc_sta cs ON c.idcyclist = cs.idcyclist;
+
+-- 27. Todos los datos de equipos de ciclistas (sin duplicados) que hayan
+-- finalizado etapas en el pódium (posiciones 1, 2, 3)
+
+SELECT DISTINCT t.*
+FROM team t 
+JOIN cyclist c ON t.idteam = c.idteam
+JOIN cyc_sta cs ON c.idcyclist = cs.idcyclist
+WHERE cs.position <= 3;
+
+-- 28. Equijoin de las tablas cyclist, cyc_sta y stage.
+
+SELECT *
+FROM cyclist c
+JOIN cyc_sta cs ON c.idcyclist = cs.idcyclist
+JOIN stage s ON cs.idstage = s.idstage;
+
+-- 29. Resultados obtenidos por Carlos Romero en todas las etapas
+
+SELECT s.*, cs.position, cs.endtime
+FROM cyclist c
+JOIN cyc_sta cs ON c.idcyclist = cs.idcyclist
+JOIN stage s ON cs.idstage = s.idstage
+WHERE c.fullname LIKE "Carlos Romero %";
+
+-- 30. Resultados de todos los ciclistas en la etapa que acabó en Jabugo
+-- ordenados por posición descendente
+
+SELECT *
+FROM cyclist c
+JOIN cyc_sta cs ON c.idcyclist = cs.idcyclist
+JOIN stage s ON cs.idstage = s.idstage
+WHERE s.endloc = "Jabugo"
+ORDER BY cs.position DESC;
+
+-- Funciones de fecha
+-- NOW fecha y hora actual
+-- CURDATE fecha actual
+-- CURTIME hora actual
+-- YEAR, MONTH, DAY, HOUR, MINUTE, SECOND
+-- DATE_ADD suma días, meses, años, etc, a una fecha
+-- DATE_SUB resta días, meses, años, etc, a una fecha
+-- TIMESTAMPDIFF resta dos fechas-horas y devuelve el resultado en las unidades indicadas
+-- STR_TO_DATE devuelve una fecha a partir de un string
+-- DATE_FORMAT devuelve un string formateado a partir de una fecha
+
+-- 31. Prueba todas las funciones de fecha y hora actual
+
+SELECT NOW(), CURDATE(), CURTIME();
+
+-- 32. En qué año estamos y en qué año nació cada ciclista
+
+SELECT *, YEAR(CURDATE()), YEAR(birthdate)
+FROM cyclist;
+
+-- 33. La fecha de hoy menos tres meses y la fecha de hoy más cien días
+
+SELECT DATE_SUB(CURDATE(), INTERVAL 3 MONTH) AS hoy_menos_3_meses,
+DATE_ADD(CURDATE(), INTERVAL 100 DAY) AS hoy_mas_100_dias;
+
+-- 34. Cuánto falta (en minutos) para que terminen hoy las clases
+
+SELECT TIMESTAMPDIFF(MINUTE, NOW(), "2026-10-29 14:30");
+
+-- 35. Cuántos años tiene cada ciclista
+
+SELECT *, TIMESTAMPDIFF(YEAR, birthdate, CURDATE())
+FROM cyclist;
+
+-- 36. Cuántos días han pasado desde la etapa que acabó en Jabugo hasta hoy
+
+SELECT TIMESTAMPDIFF(DAY, stagedate, CURDATE())
+FROM stage
+WHERE endloc = "Jabugo";
+
+-- 37. Todos los datos de las etapas pero con la fecha en formato dia-mes año
+
+SELECT *, DATE_FORMAT(stagedate, "%d/%m/%Y") AS mifecha
+FROM stage;
+
+-- Funciones de agregados
+-- SUM suma valores no nulos de una columna numérica
+-- MAX el máximo de cualquier tipo de columna
+-- MIN el mínimo de cualquier tipo de columna
+-- AVG media aritmética de valores no nulos de una columna numérica
+-- COUNT(*) cuenta filas
+-- COUNT(columna) cuenta valores no nulos en la columna
+-- COUNT(DISTINCT columna) cuenta valores distintos en la columna
+
+-- 38. Cuenta los ciclistas, suma las edades de los ciclistas, 
+-- la edad máxima, mínima y promedio
+
+SELECT COUNT(*) AS cuenta,
+SUM(TIMESTAMPDIFF(YEAR, birthdate, CURDATE())) AS suma,
+MAX(TIMESTAMPDIFF(YEAR, birthdate, CURDATE())) AS maximo,
+MIN(TIMESTAMPDIFF(YEAR, birthdate, CURDATE())) AS minimo,
+AVG(TIMESTAMPDIFF(YEAR, birthdate, CURDATE())) AS promedio
+FROM cyclist;
+
+-- 39. ¿Cuántos ciclistas españoles hay? Usa COUNT
+
+SELECT COUNT(*)
+FROM cyclist
+WHERE country = "España";
+
+-- 40. ¿Cuántos ciclistas españoles hay? ¿Cuántos belgas? Usa SUM
+
+SELECT SUM(country = "España"), SUM(country = "Bélgica")
+FROM cyclist;
+
+-- 41. ¿Cuántas etapas tienen más de 60km y cuantas tienen 60 o menos?
+
+SELECT SUM(kms > 60) AS largas, SUM(kms <= 60) AS cortas
+FROM stage;
+
+-- 42. Edad media de los ganadores de etapas
+
+SELECT AVG(TIMESTAMPDIFF(YEAR, c.birthdate, CURDATE())) AS promedio
+FROM cyclist c
+JOIN cyc_sta cs ON c.idcyclist = cs.idcyclist
+WHERE cs.position = 1;
+
+-- 43. ¿cuantos paises distintos de procedencia tienen los ciclistas ?
+
+select count(distinct country)
+from cyclist;
+
+-- 44. ¿cuantos ciclistas hay, cuantos tienen mas de 25 años y cuantos 25 o menos ?
+
+select count(*) As total,
+ sum(TIMESTAMPDIFF(YEAR, birthdate, CURDATE()) > 25) as more_than_25,
+ sum(TIMESTAMPDIFF(YEAR, birthdate, CURDATE()) <= 25) as eq_less_than_25
+from cyclist;
+
+
+
+-- 45. cada ciclista recibe el siguiente premio en metalico por etapa:
+-- -- 1000€ por quedar primero
+-- -- 500€ por quedar segundo
+-- -- 350€ por quedar tercero
+-- -- 100€ resto de posiciones
+-- -- cuanto dinero se ha repartido en total
+
+select sum(position = 1) * 1000 + sum(position = 2) * 500 + sum(position = 3) *350 + sum(position > 3) * 100
+from cyc_sta;
+
+-- 46. cuanto dinero ha ganado javier moreno gil ?
+select sum(position = 1) * 1000 + sum(position = 2) * 500 + sum(position = 3) *350 + sum(position > 3) * 100
+from cyclist c join cyc_sta cs on c.idcyclist = cs.idcyclist
+where c.fullname = "javier moreno gil"
+
+-- 47  cuanto dinero ha ganado el equipo atlantic riders?
+select sum(position = 1) * 1000 + sum(position = 2) * 500 + sum(position = 3) *350 + sum(position > 3) * 100 as total
+from team t
+join cyclist c on t.idteam = c.idteam
+join cyc_sta cs on c.idcyclist = cs.idcyclist
+where t.nameteam = "atlantic riders";
+
+-- 48 cuantos ciclistas nacieron en verano
+select count(*)
+from cyclist
+where month(birthdate) = 6 and day (birthdate) >=21
