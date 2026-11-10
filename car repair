@@ -1,0 +1,298 @@
+DROP DATABASE IF EXISTS car_repair;
+CREATE DATABASE car_repair;
+USE car_repair;
+CREATE TABLE customer(
+  idcustomer INT PRIMARY KEY AUTO_INCREMENT,
+  cif VARCHAR(9) NOT NULL UNIQUE,
+  namecus VARCHAR(45) NOT NULL,
+  email VARCHAR(45),
+  phone INT
+);
+CREATE TABLE vehicle(
+  idvehicle VARCHAR(7) PRIMARY KEY,
+  brand VARCHAR(45),
+  model VARCHAR(45),
+  inidate DATE
+);
+
+CREATE TABLE invoice(
+  idinvoice INT PRIMARY KEY,
+  releasedate DATE NOT NULL,
+  payment ENUM('Outstanding', 'Credit card', 'Cash', 'Bizum', 'Check'),
+  pricehour DECIMAL(6,2),
+  idcustomer INT NOT NULL,
+  idvehicle VARCHAR(7),
+  FOREIGN KEY (idvehicle) REFERENCES vehicle(idvehicle),
+  FOREIGN KEY (idcustomer) REFERENCES customer(idcustomer)
+);
+
+CREATE TABLE product (
+  idproduct INT PRIMARY KEY AUTO_INCREMENT,
+  descr VARCHAR(45) NOT NULL,
+  price DECIMAL(8,2),
+  stock INT
+);
+
+CREATE TABLE mechanic(
+  idmechanic INT PRIMARY KEY AUTO_INCREMENT,
+  cif VARCHAR(9) UNIQUE,
+  namemec VARCHAR(45),
+  email VARCHAR(45),
+  phone INT
+);
+
+CREATE TABLE item_work(
+  idinvoice INT,
+  idmechanic INT,
+  numhours DECIMAL(4,1),
+  descr VARCHAR(45),
+  FOREIGN KEY (idinvoice) REFERENCES invoice(idinvoice),
+  FOREIGN KEY (idmechanic) REFERENCES mechanic(idmechanic),
+  PRIMARY KEY (idinvoice, idmechanic)
+);
+
+CREATE TABLE item_prod(
+  idinvoice INT,
+  idproduct INT,
+  price DECIMAL(8,2),
+  units INT,
+  FOREIGN KEY (idinvoice) REFERENCES invoice(idinvoice),
+  FOREIGN KEY (idproduct) REFERENCES product(idproduct),
+  PRIMARY KEY (idinvoice, idproduct)
+);
+
+-- Insert some sample records
+
+INSERT INTO customer(idcustomer, cif, namecus, email, phone) VALUES
+(1, '45678912X', 'Pérez Gómez, Ana', 'ana.perez@email.com', '600123456'),
+(2, 'B9876543C', 'Distribuciones del Sur S.L.', 'info@distrisur.es', '954987654'),
+(3, '12345678Z', 'Martín Ruiz, Carlos', 'carlos.martin@email.com', '611234567'),
+(4, 'B5566778E', 'Moda y Estilo Urbano S.L.', 'pedidos@modaurbana.es', '963456789'),
+(5, 'A9988776F', 'Logística Global Express', NULL, '912345678'),
+(6, '87654321Y', 'García Fernández, María', 'maria.garcia@email.com', '622345678'),
+(7, 'A7766554H', 'Consultoría Integral S.A.', 'asesoria@conintegral.com', '911888999'),
+(8, 'X1234567M', 'López Silva, Juan Carlos', 'juan.lopez@email.com', '633456789'),
+(9, 'A5544332J', 'Energías Renovables Alfa', 'proyectos@energalfa.com', '944556677'),
+(10, '34567891V', 'Sánchez Mora, Laura', 'laura.sanchez@email.com', '644556677'),
+(11, 'A1245781L', 'Desarrollos Digitales S.A.', 'hola@desadigital.com', '910998877'),
+(12, 'B3692581M', 'Cafés y Hostelería Real', 'central@cafesreal.es', NULL),
+(13, '56789123K', 'Rodríguez Martínez, David', 'david.rodriguez@email.com', '655667788'),
+(14, 'B1593572O', 'Inmobiliaria Nueva Era', 'info@nuevaerainmo.com', NULL),
+(15, 'Y9876543W', 'Torres Santos, Elena', 'elena.torres@email.com', '666778899');
+
+INSERT INTO vehicle(idvehicle, brand, model, inidate) VALUES
+('9090GVB', 'Ford', 'Mustang', '2000-09-21'),
+('8787TGS', 'Ford', 'Fiesta', '1999-10-11'),
+('0787RGS', 'Ford', 'Fiesta', '1999-10-13'),
+('8747TQS', 'Ford', 'Bronco', '2010-12-21'),
+('7655HHB', 'Opel', 'Corsa', '2011-09-12'),
+('6161KKV', 'Mercedes', 'C180', '2020-09-22'),
+('0909HHR', 'Mercedes', 'C180', '2020-09-23'),
+('0929THR', 'Mercedes', 'A100', '2021-09-13');
+
+INSERT INTO product(idproduct, descr, price, stock)
+VALUES
+(1, 'Air filter Big',  27.00, 100),
+(2, 'Air filter Medium', 25.00, 50),
+(3, 'Air filter Small', 23.00, 10),
+(4, 'Battery 40A', 70.00, 350),
+(5, 'Battery 60A', 75.00, 250),
+(6, 'Battery 80A', 80.00, 150),
+(7, 'Rearview mirror', 72.95, 15),
+(8, 'Fuel Injector A', 120.00, 7),
+(9, 'Fuel Injector B', 130.00, 17),
+(10, 'Fuel Injector C', 140.00, 7),
+(11, 'Spark plug', 32.99, 20),
+(12, 'Oil 20W50', 16.10, 2),
+(13, 'Oil 30W50', 18.10, 21);
+
+INSERT INTO mechanic(idmechanic, cif, namemec, email, phone) VALUES
+(1, '44556677D', 'Gómez Martínez, Francisco', 'taller.fran@email.com', '699112233'),
+(2, '22334455K', 'Fernández Ruiz, Alejandro', 'alex.mecanica@email.com', '611889900'),
+(3, '77889900Q', 'Rodríguez López, Manuel', 'manuel.mecanica@email.com', '688334455'),
+(4, '88776655L', 'Sánchez Ramos, Carlos', 'carlos.sanchez.motores@email.com', '622445566'),
+(5, 'X9988776A', 'Simeone, Roberto Carlos', 'roberto.mecanico@email.com', '677556677');
+
+INSERT INTO invoice(idinvoice, releasedate, payment, pricehour, idcustomer, idvehicle) VALUES
+(20240001, '2024-01-15', 'Credit card', 40.00, 1, '9090GVB'),
+(20240002, '2024-01-22', 'Cash',        40.00, 2, '8787TGS'),
+(20240003, '2024-02-05', 'Bizum',       40.00, 3, '0787RGS'),
+(20240004, '2024-02-18', 'Outstanding', 40.00, 4, '8747TQS'),
+(20240005, '2024-03-12', 'Credit card', 40.00, 6, '7655HHB'),
+(20240006, '2024-03-25', 'Check',        40.00, 8, '6161KKV'),
+(20240007, '2024-04-02', 'Cash',        40.00, 10, '0909HHR'),
+(20240008, '2024-04-19', 'Bizum',       40.00, 13, '0929THR'),
+(20240009, '2024-05-14', 'Credit card', 40.00, 15, '9090GVB'),
+(20240010, '2024-06-01', 'Cash',        40.00, 2, '8787TGS'),
+(20240011, '2024-06-20', 'Outstanding', 40.00, 7, '0787RGS'),
+(20240012, '2024-07-11', 'Bizum',       40.00, 9, '8747TQS'),
+(20240013, '2024-07-29', 'Credit card', 40.00, 11, '7655HHB'),
+(20240014, '2024-08-05', 'Cash',        40.00, 1, '6161KKV'),
+(20240015, '2024-08-22', 'Bizum',       40.00, 3, '0909HHR'),
+(20240016, '2024-09-02', 'Cash',        NULL,  4, NULL),
+(20240017, '2024-09-17', 'Outstanding', NULL,  5, NULL),
+(20240018, '2024-10-10', 'Credit card', NULL,  12, NULL),
+(20240019, '2024-10-24', 'Bizum',       NULL,  14, NULL),
+(20240020, '2024-11-05', 'Check',       NULL,  6, NULL),
+(20240021, '2024-11-18', 'Cash',        NULL,  8, NULL),
+(20240022, '2024-12-03', 'Credit card', NULL,  10, NULL),
+(20240023, '2024-12-20', 'Bizum',       NULL,  13, NULL);
+
+INSERT INTO item_work(idinvoice, idmechanic, numhours, descr) VALUES
+(20240001, 1, 2.5, 'Oil change and general inspection'),
+(20240002, 2, 4.0, 'Brake pads and discs replacement'),
+(20240003, 3, 1.5, 'Battery replacement'),
+(20240004, 4, 5.0, 'Electrical system repair'),
+(20240005, 5, 3.0, 'Filters replacement and diagnostics'),
+(20240006, 1, 6.5, 'Front shock absorbers replacement'),
+(20240007, 2, 2.0, 'Wheel alignment and balancing'),
+(20240008, 3, 3.5, 'Cooling system repair'),
+(20240009, 4, 1.5, 'Rearview mirror installation'),
+(20240010, 5, 4.5, 'Faulty fuel injectors replacement'),
+(20240011, 1, 2.0, 'Spark plugs replacement'),
+(20240012, 2, 3.0, 'Pre-ITV inspection and headlights adjustment'),
+(20240013, 3, 2.5, 'Battery change and alternator test'),
+(20240014, 4, 1.0, 'Quick air filter replacement'),
+(20240015, 5, 5.5, 'Fuel system deep cleaning');
+
+INSERT INTO item_prod(idinvoice, idproduct, price, units) VALUES
+(20240009, 7,  69.30,  1),
+(20240010, 8,  110.40, 2),
+(20240011, 11, 31.67,  4),
+(20240012, 2,  23.50,  1),
+(20240013, 5,  72.75,  1),
+(20240014, 1,  24.30,  1),
+(20240015, 12, 15.78,  2),
+(20240016, 4,  65.10,  1),
+(20240017, 13, 16.83,  1),
+(20240018, 3,  21.85,  2),
+(20240019, 6,  73.60,  1),
+(20240020, 11, 30.02,  4),
+(20240021, 1,  25.92,  1),
+(20240022, 9,  122.20, 1),
+(20240023, 2,  24.25,  1);
+
+INSERT INTO invoice(idinvoice, releasedate, payment, pricehour, idcustomer, idvehicle) VALUES
+(20250001, '2025-01-10', 'Credit card', 42.00, 1, '9090GVB'),
+(20250002, '2025-01-20', 'Cash',        42.00, 3, '8787TGS'),
+(20250003, '2025-02-02', 'Bizum',       42.00, 5, '0787RGS'),
+(20250004, '2025-02-14', 'Outstanding', 42.00, 7, '8747TQS'),
+(20250005, '2025-03-03', 'Credit card', 42.00, 9, '7655HHB'),
+(20250006, '2025-03-21', 'Check',       42.00, 11, '6161KKV'),
+(20250007, '2025-04-09', 'Cash',        42.00, 13, '0909HHR'),
+(20250008, '2025-04-28', 'Bizum',       42.00, 15, '0929THR'),
+(20250009, '2025-05-11', 'Credit card', 42.00, 2, '9090GVB'),
+(20250010, '2025-05-25', 'Cash',        42.00, 4, '8787TGS'),
+(20250011, '2025-06-08', 'Bizum',       42.00, 6, '0787RGS'),
+(20250012, '2025-06-22', 'Outstanding', 42.00, 8, '8747TQS'),
+(20250013, '2025-07-04', 'Credit card', 42.00, 10, '7655HHB'),
+(20250014, '2025-07-19', 'Cash',        42.00, 12, '6161KKV'),
+(20250015, '2025-08-01', 'Bizum',       42.00, 14, '0909HHR'),
+(20250016, '2025-08-17', 'Check',       42.00, 1, '0929THR'),
+(20250017, '2025-09-05', 'Credit card', 42.00, 3, '9090GVB'),
+(20250018, '2025-09-19', 'Cash',        42.00, 5, '8787TGS'),
+(20250019, '2025-10-02', 'Bizum',       42.00, 7, '0787RGS'),
+(20250020, '2025-10-15', 'Outstanding', 42.00, 9, '8747TQS'),
+(20250021, '2025-10-29', 'Cash',        NULL,  11, NULL),
+(20250022, '2025-11-04', 'Credit card', NULL,  13, NULL),
+(20250023, '2025-11-12', 'Bizum',       NULL,  15, NULL),
+(20250024, '2025-11-20', 'Check',       NULL,  2, NULL),
+(20250025, '2025-11-28', 'Outstanding', NULL,  4, NULL),
+(20250026, '2025-12-05', 'Cash',        NULL,  6, NULL),
+(20250027, '2025-12-12', 'Credit card', NULL,  8, NULL),
+(20250028, '2025-12-18', 'Bizum',       NULL,  10, NULL),
+(20250029, '2025-12-23', 'Cash',        NULL,  12, NULL),
+(20250030, '2025-12-29', 'Credit card', NULL,  14, NULL);
+
+INSERT INTO item_work(idinvoice, idmechanic, numhours, descr) VALUES
+(20250001, 1, 1.5, 'Diagnosis and clearing OBD error codes'),
+(20250002, 2, 3.0, 'Brake fluid replacement'),
+(20250003, 3, 2.0, 'Auxiliary drive belt replacement'),
+(20250004, 4, 4.5, 'Electric window regulator repair'),
+(20250005, 5, 2.5, 'Cabin air filters replacement'),
+(20250006, 1, 7.0, 'Complete clutch kit replacement'),
+(20250007, 2, 1.0, 'Main headlights adjustment and leveling'),
+(20250008, 3, 3.5, 'EGR valve cleaning'),
+(20250009, 4, 2.0, 'Coolant leak repair'),
+(20250010, 5, 5.0, 'Suspension ball joints replacement'),
+(20250011, 1, 4.0, 'Fuel injectors replacement'),
+(20250012, 2, 2.5, 'Engine oil and filters change'),
+(20250013, 3, 1.5, 'Broken rearview mirror replacement'),
+(20250014, 4, 3.0, 'High-capacity battery replacement'),
+(20250015, 5, 2.0, 'Spark plugs replacement'),
+(20250016, 1, 3.5, 'Water pump replacement'),
+(20250017, 2, 4.5, 'Rear brake discs replacement'),
+(20250018, 3, 1.0, 'Xenon bulbs replacement'),
+(20250019, 4, 6.0, 'Engine carbon cleaning'),
+(20250020, 5, 2.5, 'Brake system adjustment and bleeding');
+
+INSERT INTO item_prod(idinvoice, idproduct, price, units) VALUES
+(20250011, 10, 131.60, 2),
+(20250012, 1,  25.65,  1),
+(20250013, 7,  67.11,  1),
+(20250014, 6,  76.80,  1),
+(20250015, 11, 30.34,  4),
+(20250016, 2,  23.00,  1),
+(20250017, 4,  64.40,  1),
+(20250018, 12, 15.29,  1),
+(20250019, 3,  21.39,  1),
+(20250020, 5,  71.25,  1),
+(20250021, 13, 17.20,  2),
+(20250022, 11, 31.97,  4),
+(20250023, 2,  22.50,  1),
+(20250024, 4,  66.50,  1),
+(20250025, 7,  70.03,  1),
+(20250026, 8,  114.00, 1),
+(20250027, 1,  25.11,  2),
+(20250028, 5,  73.50,  1),
+(20250029, 12, 14.49,  2),
+(20250030, 9,  122.20, 1);
+
+INSERT INTO invoice(idinvoice, releasedate, payment, pricehour, idcustomer, idvehicle) VALUES
+(20260001, '2026-01-08', 'Credit card', 44.10, 2, '9090GVB'),
+(20260002, '2026-01-22', 'Cash',        44.10, 4, '8787TGS'),
+(20260003, '2026-02-11', 'Bizum',       44.10, 6, '0787RGS'),
+(20260004, '2026-02-27', 'Outstanding', 44.10, 8, '8747TQS'),
+(20260005, '2026-03-10', 'Credit card', 44.10, 10, '7655HHB'),
+(20260006, '2026-03-24', 'Check',       44.10, 12, '6161KKV'),
+(20260007, '2026-04-05', 'Cash',        44.10, 14, '0909HHR'),
+(20260008, '2026-04-18', 'Bizum',       44.10, 1, '0929THR'),
+(20260009, '2026-05-02', 'Credit card', 44.10, 3, '9090GVB'),
+(20260010, '2026-05-19', 'Cash',        44.10, 5, '8787TGS'),
+(20260011, '2026-06-03', 'Bizum',       44.10, 7, '0787RGS'),
+(20260012, '2026-06-15', 'Outstanding', 44.10, 9, '8747TQS'),
+(20260013, '2026-07-02', 'Cash',        NULL,  11, NULL),
+(20260014, '2026-07-20', 'Credit card', NULL,  13, NULL),
+(20260015, '2026-08-05', 'Bizum',       NULL,  15, NULL),
+(20260016, '2026-08-22', 'Check',       NULL,  1, NULL),
+(20260017, '2026-09-11', 'Outstanding', NULL,  3, NULL),
+(20260018, '2026-10-01', 'Cash',        NULL,  5, NULL);
+
+INSERT INTO item_work(idinvoice, idmechanic, numhours, descr) VALUES
+(20260001, 1, 2.0, 'Antifreeze fluid replacement'),
+(20260002, 2, 3.5, 'Sway bar links replacement'),
+(20260003, 3, 1.5, 'Windshield wiper blades replacement'),
+(20260004, 4, 4.0, 'Driver door lock repair'),
+(20260005, 5, 2.5, 'Complete ECU electrical diagnostics'),
+(20260006, 1, 5.5, 'Front wheel bearings replacement'),
+(20260007, 2, 4.5, 'Full set brake pads replacement'),
+(20260008, 3, 2.0, 'Fuel filter replacement'),
+(20260009, 4, 3.0, 'Transmission oil change'),
+(20260010, 5, 1.5, 'New battery installation'),
+(20260011, 1, 4.0, 'Intake manifold carbon cleaning'),
+(20260012, 2, 2.5, 'Preventive spark plugs replacement');
+
+INSERT INTO item_prod(idinvoice, idproduct, price, units) VALUES
+(20260007, 2,  23.50,  1),
+(20260008, 13, 16.65,  1),
+(20260009, 8,  115.20, 2),
+(20260010, 4,  64.40,  1),
+(20260011, 1,  25.11,  1),
+(20260012, 11, 31.01,  4),
+(20260013, 5,  69.00,  1),
+(20260014, 7,  67.84,  1),
+(20260015, 3,  21.16,  2),
+(20260016, 6,  75.20,  1),
+(20260017, 12, 15.61,  2),
+(20260018, 10, 128.80, 1);
+
