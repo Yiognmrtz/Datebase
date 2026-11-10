@@ -1,0 +1,149 @@
+-- 1  todas los datos de las facturas de 2025 y 2026
+select *
+from invoice
+where year (releasedate) in (2025, 2026);
+
+-- 2. lo mismo con el operador between
+select *
+from invoice
+where releasedate between '2025-01-01' and '2026-12-31';
+
+-- 3. equijoin de clientes y facturas
+select *
+from customer c join invoice i on c.idcustomer = i.idcustomer;
+
+-- 4 las facturas de elena torres pagadas con bizum
+
+select *
+from customer c join invoice i on c.idcustomer = i.idcustomer
+where c.namecus like "Torres %, Elena" and i.payment = "bizum"  ;
+
+
+-- 5 equijoin de facturas e items de productos
+
+select * 
+from invoice i join item_prod ip on i.idinvoice = ip.idinvoice;
+
+-- 6 suma de importe de productos e iva (21%) de las facturas del año 2025
+
+select sum(ip.price * ip.units) as sum_import,
+round(sum(ip.price *ip.units) * 0.21,2) as sum_vat
+from invoice i join item_prod ip on i.idinvoice = ip.idinvoice
+where year (i.releasedate) = 2025;
+
+-- 7 cuantas facturas hay en total, cuantas en 2025 y cuantas en 2026
+
+select count(*) as count_all,
+sum(year(releasedate)=2025)as count_2025,
+sum(year(releasedate)=2026)as count_2026
+from invoice;
+
+-- 8 incremento en tanto por ciento del numero de facturas entre 2024 y 2025
+
+select 
+(sum(year(releasedate)=2025) -
+sum(year(releasedate)=2024))
+/ sum(year(releasedate)=2024)*100 as increase
+from invoice;
+
+-- 9 equijoin de facturas e items de mano de obra 
+
+select *
+from invoice i join item_work iw on i.idinvoice = iw.idinvoice;
+
+-- 10 suma e importe, iva y total de la mano de de obra del 2025
+
+select sum(i.pricehour * iw.numhours) as sum_import,
+round(sum(i.pricehour* iw.numhours)*0.21, 2) as sum_vat,
+round(sum(i.pricehour* iw.numhours)*1.21, 2) as sum_tot
+from invoice i join item_work iw on i.idinvoice = iw.idinvoice
+where year (i.releasedate)= 2025;
+
+-- 11. cuantos vehiculos hay y cuantos son de marca ford
+select count(*) as count_all,
+sum(brand="ford") as count_ford
+from vehicle;
+
+-- 12 todos los datos de facturas de vehiculos ford fiesta
+select i.*
+from vehicle v join invoice i on v.idvehicle = i.idvehicle
+where v.brand = "ford" and v.model = "fiesta";
+
+-- 13 suma de numeros de horas facturadas por el mecanico carlos sanchez
+
+select sum(numhours) as sum_hours
+from mechanic m join item_work iw on m.idmechanic = iw.idmechanic
+where m.namemec like "sanchez %, Carlos";
+-- 14 importe, iva y total de las horas facturadas por el mecanico Carlos sanchez
+
+select sum(numhours * pricehour) as impor,
+sum(iw.numhours * i.pricehour) *0.21 as vat,
+sum(iw.numhours * i.pricehour) *1.21 as total
+from mechanic m join item_work iw on m.idmechanic = iw.idmechanic
+join invoice i on iw.idinvoice = i.idinvoice
+where m.namemec like "sanchez %, Carlos";
+
+-- 15 todos los datos de iten de productos que sean baterias
+
+select *
+from product p join item_prod ip on p.idproduct = ip.idproduct
+where descr like "Battery%";
+
+-- 16 de la consulta anterior, suma de unidades, suma de importe, suma de iva y suma de total
+
+select sum(ip.units) as sum_units,
+sum(ip.price * ip.units) as sum_imp,
+sum(ip.price * ip.units) * 0.21 as sum_vat,
+sum(ip.price * ip.units) * 1.21 as sum_tot
+from product p join item_prod ip on p.idproduct = ip.idproduct
+where descr like "Battery%";
+
+-- 17 de la consulta anrterior, solo las ventas de 2026
+select sum(ip.units) as sum_units,
+sum(ip.price * ip.units) as sum_imp,
+sum(ip.price * ip.units) * 0.21 as sum_vat,
+sum(ip.price * ip.units) * 1.21 as sum_tot
+from product p join item_prod ip on p.idproduct = ip.idproduct
+join invoice i on i.idinvoice = ip.idinvoice
+where descr like "Battery%" and year(releasedate) = 2026;
+
+-- 18 todos los datos productos con una columna llamada category:
+-- very cheap hasta 25€
+-- cheap hasta 50€
+-- medium hasta 75€
+-- expensive hasta 100€
+-- very expensive mas de 100€
+-- solucion con la funcion if
+
+
+-- 19 la consulta anterior, solucion con case
+select *,
+if (price <= 25, "very cheap",
+if (price <= 50, "cheap",
+if (price <= 75, "medium",
+if (price <= 100, "expensive", "very expensive")
+)
+)
+) as category
+from product;
+
+-- 20 todos los datos de facturas cobradas en efectivo a vehiculos ford o mercedes
+select *
+from vehicle v join invoice i on v.idvehicle = i.idvehicle
+where v.brand in ("ford", "mercedes") and i.payment = "cash";
+
+
+-- 21 todos los datos de facturas pendientes de cobro a clientes que no tienen telefono
+
+select * 
+from customer c join invoice i on c.idcustomer = i.idcustomer
+where i.payment = "outstanding" and c.phone is null;
+
+-- 22 cuantas facturas hay en total, cuantas se cobraron en efectivo, cuantas con cualquier otro metodo de pago y cuantas pendientes
+
+select count(*) as count_all, sum(payment= "cash") as count_cash,
+sum(payment not in ("cash", " Outstanding")) as count_other,
+ sum(payment = " Outstanding") as count_out
+ from invoice;
+ 
+ -- 23 cuantos clientes hay cuantoas tienen email y cuantos no
