@@ -1,0 +1,276 @@
+-- 1  todas los datos de las facturas de 2025 y 2026
+select *
+from invoice
+where year (releasedate) in (2025, 2026);
+
+-- 2. lo mismo con el operador between
+select *
+from invoice
+where releasedate between '2025-01-01' and '2026-12-31';
+
+-- 3. equijoin de clientes y facturas
+select *
+from customer c join invoice i on c.idcustomer = i.idcustomer;
+
+-- 4 las facturas de elena torres pagadas con bizum
+
+select *
+from customer c join invoice i on c.idcustomer = i.idcustomer
+where c.namecus like "Torres %, Elena" and i.payment = "bizum"  ;
+
+
+-- 5 equijoin de facturas e items de productos
+
+select * 
+from invoice i join item_prod ip on i.idinvoice = ip.idinvoice;
+
+-- 6 suma de importe de productos e iva (21%) de las facturas del año 2025
+
+select sum(ip.price * ip.units) as sum_import,
+round(sum(ip.price *ip.units) * 0.21,2) as sum_vat
+from invoice i join item_prod ip on i.idinvoice = ip.idinvoice
+where year (i.releasedate) = 2025;
+
+-- 7 cuantas facturas hay en total, cuantas en 2025 y cuantas en 2026
+
+select count(*) as count_all,
+sum(year(releasedate)=2025)as count_2025,
+sum(year(releasedate)=2026)as count_2026
+from invoice;
+
+-- 8 incremento en tanto por ciento del numero de facturas entre 2024 y 2025
+
+select 
+(sum(year(releasedate)=2025) -
+sum(year(releasedate)=2024))
+/ sum(year(releasedate)=2024)*100 as increase
+from invoice;
+
+-- 9 equijoin de facturas e items de mano de obra 
+
+select *
+from invoice i join item_work iw on i.idinvoice = iw.idinvoice;
+
+-- 10 suma e importe, iva y total de la mano de de obra del 2025
+
+select sum(i.pricehour * iw.numhours) as sum_import,
+round(sum(i.pricehour* iw.numhours)*0.21, 2) as sum_vat,
+round(sum(i.pricehour* iw.numhours)*1.21, 2) as sum_tot
+from invoice i join item_work iw on i.idinvoice = iw.idinvoice
+where year (i.releasedate)= 2025;
+
+-- 11. cuantos vehiculos hay y cuantos son de marca ford
+select count(*) as count_all,
+sum(brand="ford") as count_ford
+from vehicle;
+
+-- 12 todos los datos de facturas de vehiculos ford fiesta
+select i.*
+from vehicle v join invoice i on v.idvehicle = i.idvehicle
+where v.brand = "ford" and v.model = "fiesta";
+
+-- 13 suma de numeros de horas facturadas por el mecanico carlos sanchez
+
+select sum(numhours) as sum_hours
+from mechanic m join item_work iw on m.idmechanic = iw.idmechanic
+where m.namemec like "sanchez %, Carlos";
+-- 14 importe, iva y total de las horas facturadas por el mecanico Carlos sanchez
+
+select sum(numhours * pricehour) as impor,
+sum(iw.numhours * i.pricehour) *0.21 as vat,
+sum(iw.numhours * i.pricehour) *1.21 as total
+from mechanic m join item_work iw on m.idmechanic = iw.idmechanic
+join invoice i on iw.idinvoice = i.idinvoice
+where m.namemec like "sanchez %, Carlos";
+
+-- 15 todos los datos de iten de productos que sean baterias
+
+select *
+from product p join item_prod ip on p.idproduct = ip.idproduct
+where descr like "Battery%";
+
+-- 16 de la consulta anterior, suma de unidades, suma de importe, suma de iva y suma de total
+
+select sum(ip.units) as sum_units,
+sum(ip.price * ip.units) as sum_imp,
+sum(ip.price * ip.units) * 0.21 as sum_vat,
+sum(ip.price * ip.units) * 1.21 as sum_tot
+from product p join item_prod ip on p.idproduct = ip.idproduct
+where descr like "Battery%";
+
+-- 17 de la consulta anrterior, solo las ventas de 2026
+select sum(ip.units) as sum_units,
+sum(ip.price * ip.units) as sum_imp,
+sum(ip.price * ip.units) * 0.21 as sum_vat,
+sum(ip.price * ip.units) * 1.21 as sum_tot
+from product p join item_prod ip on p.idproduct = ip.idproduct
+join invoice i on i.idinvoice = ip.idinvoice
+where descr like "Battery%" and year(releasedate) = 2026;
+
+-- 18 todos los datos productos con una columna llamada category:
+-- very cheap hasta 25€
+-- cheap hasta 50€
+-- medium hasta 75€
+-- expensive hasta 100€
+-- very expensive mas de 100€
+-- solucion con la funcion if
+
+
+-- 19 la consulta anterior, solucion con case
+select *,
+if (price <= 25, "very cheap",
+if (price <= 50, "cheap",
+if (price <= 75, "medium",
+if (price <= 100, "expensive", "very expensive")
+)
+)
+) as category
+from product;
+
+-- 20 todos los datos de facturas cobradas en efectivo a vehiculos ford o mercedes
+select *
+from vehicle v join invoice i on v.idvehicle = i.idvehicle
+where v.brand in ("ford", "mercedes") and i.payment = "cash";
+
+
+-- 21 todos los datos de facturas pendientes de cobro a clientes que no tienen telefono
+
+select * 
+from customer c join invoice i on c.idcustomer = i.idcustomer
+where i.payment = "outstanding" and c.phone is null;
+
+-- 22 cuantas facturas hay en total, cuantas se cobraron en efectivo, cuantas con cualquier otro metodo de pago y cuantas pendientes
+
+select count(*) as count_all, sum(payment= "cash") as count_cash,
+sum(payment not in ("cash", " Outstanding")) as count_other,
+ sum(payment = " Outstanding") as count_out
+ from invoice;
+ 
+ -- 23 cuantos clientes hay cuantoas tienen email y cuantos no
+ select count(*) as count_all,
+ count(email) as count_email,
+ sum(email is null) as count_no_email
+ from customer;
+ 
+ -- 24 todos los items de baterias, con el precio de catalogo, el precio de venta el descuento en euros y el descuento en porcentaje
+ select*, p.price - ip.price as disc_euro, 
+ (p.price - ip.price) / p.price * 100 as disc_perc
+ from product p join item_prod ip on p.idproduct = ip.idproduct
+ where descr like "Battery %";
+ 
+ -- 25 crea una copia de la tabla de productos, llamada product_back, con los diez primeros productos, para hacer pruebas de borrado y actualizacion
+ 
+ create table product_back as
+ select *
+ from product
+ where idproduct <= 10;
+ 
+ -- 26 incrementa en 10 unidades el stock de todas las baterias
+ 
+ update product_back
+ set stock = stock +10
+ where descr like "Battery %";
+ 
+ -- 27 decrementa en un 10% el precio de los productos 2, 3, 4 y 6
+ 
+ update product_back
+ set price = price * 0.90
+ where idproduct in (2, 3, 4, 6);
+ 
+ -- 28 borra las filas desde la 6 en adelante 
+ 
+ delete from product_back
+ where idproduct >= 6;
+ 
+ -- 29 inserta un nuevo producto inventado
+ 
+ insert into product_back(idproduct, descr, price, stock)
+ values (6, "Battery 100A",  125, 1);
+ 
+ -- 30 concatenar una letra h minuscula al final de la descripcion de las baterias
+ update product_back
+ set descr = concat(descr, "h")
+ where descr like "Battery %";
+ 
+ -- 31 inserta los productos del 7 en adelante desde la tabla "product"
+ insert into product_back
+ select *
+ from product
+ where idproduct >= 7;
+ 
+ -- 32 vehiculos del cliente carlos martin ruiz
+ select i.idvehicle
+ from customer c join  invoice i on c.idcustomer = i.idcustomer
+ where c.namecus = "martin ruiz, carlos";
+ 
+ -- 33 añadir a lo anterior todos de los vehiculos
+ 
+  select distinct  v.*
+ from customer c join  invoice i on c.idcustomer = i.idcustomer
+ join vehicle v on i.idvehicle = v.idvehicle
+ where c.namecus = "martin ruiz, carlos";
+ 
+ -- 34  identificador de vehiculos reparados por simeone
+ 
+ select i.idvehicle
+ from invoice i join item_work iw on i.idinvoice = iw.idinvoice
+ join mechanic m on iw.idmechanic = m.idmechanic
+ where m.namemec  like "Simeone, %";
+ 
+ -- 35 añadir a lo anterior todos los datos de los vehiculos
+ 
+  select v.*
+ from vehicle 
+ join invoice i on v.idvehicle = i.idvehicle
+ join item_work iw on i.idinvoice = iw.idinvoice
+ join mechanic m on iw.idmechanic = m.idmechanic
+ where m.namemec  like "Simeone, %";
+ 
+ -- 36 identificadores de clientes que hayan comprado inyectores 
+ select *
+ from invoice i 
+ join item_prod ip on i.idinvoice = ip.idinvoice
+ join product p on ip.idproduct = p.idproduct
+ where p.descr like "% injector %";
+ 
+ -- 37 añadir a lo anterior todos los datos de los clientes
+ 
+ select distinct c.*
+ from customer c
+ join invoice i on c.idcustomer = i.idcustomer
+ join item_prod ip on i.idinvoice = ip.idinvoice
+ join product p on ip.idproduct = p.idproduct
+ where p.descr like "% injector %"
+ order by 1;
+ 
+ -- 38 identificadores de facturas que tengan items de los dos tipos en el equijoin solo aparecen facturas donde se emparejan items de los dos tipos
+ 
+ select distinct ip.idinvoice, iw.idinvoice
+ from item_prod ip join item_work iw on ip.idinvoice = iw.idinvoice;
+ 
+ -- 39 añadirt a lo anterior todos los datos de las facturas
+ 
+ select distinct i.*
+ from invoice i
+ join item_prod ip on i.idinvoice = ip.idinvoice
+ join item_work iw on ip.idinvoice = iw.idinvoice;
+ 
+-- la funcion substring_index tiene tres parametros:
+-- el string
+-- el substring que se va a buscar 
+--  el numero de veces que se va a buscar el substring
+-- si el tercer parametro es positivo, funciona de izquierda a derecha
+-- si el tercer parametros es negativo funciona de derecha a izquierda
+
+-- 40. todos los datos de los clientes con una columna para los apellidos y otra para el nombre
+
+select *,
+substring_index(namemec, ",", 1) as lastname,
+SUBSTRING_INDEX(namemec, ",", -1) as firstname
+from mechanic;
+
+-- 41 todo s los datos de las facturas con las fechas con el nombre del mes
+
+set lc_time_names = "es_ES";
+select *, date_format(releasedate, "%d de %M del año %Y") as mydate
+from invoice; 
